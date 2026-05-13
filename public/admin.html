@@ -250,6 +250,26 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1040; display: none; align-items: center; justify-content: center; padding: 1rem; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: var(--surface); border-radius: 16px; width: 100%; max-width: 460px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.22); }
+
+    /* ── Buscador ── */
+    .buscar-wrap  { margin-bottom: 1rem; }
+    .buscar-inner { position: relative; display: flex; align-items: center; }
+    .buscar-icono { position: absolute; left: 0.85rem; color: var(--muted); pointer-events: none; flex-shrink: 0; }
+    .buscar-input {
+      width: 100%;
+      padding: 0.75rem 4rem 0.75rem 2.65rem;
+      font-size: 0.95rem; font-family: 'Inter', sans-serif; color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .buscar-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
+    .buscar-contador {
+      position: absolute; right: 0.85rem;
+      font-size: 0.78rem; font-weight: 600; color: var(--muted);
+      white-space: nowrap; pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -273,6 +293,20 @@
   <div class="section-header">
     <span class="section-title">Alumnos y entradas</span>
     <button class="btn-add" id="btn-abrir-modal">+ Añadir alumno</button>
+  </div>
+
+  <!-- Buscador -->
+  <div class="buscar-wrap">
+    <div class="buscar-inner">
+      <svg class="buscar-icono" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="search" id="inp-buscar" class="buscar-input"
+             placeholder="Buscar por nombre o apellidos…" autocomplete="off">
+      <span id="buscar-contador" class="buscar-contador" style="display:none"></span>
+    </div>
   </div>
 
   <!-- Vista móvil: tarjetas -->
@@ -347,6 +381,37 @@
   const toastEl = document.getElementById('toast-copiado');
   const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
 
+  let alumnosTodos = [];
+
+  function normalizar(s) {
+    return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  function filtrarYRenderizar() {
+    const q = normalizar(document.getElementById('inp-buscar').value.trim());
+    const tokens = q.split(/\s+/).filter(Boolean);
+    const buscando = tokens.length > 0;
+
+    const filtrados = !buscando
+      ? alumnosTodos
+      : alumnosTodos.filter(a => {
+          const hay = normalizar(`${a.nombre} ${a.apellidos} ${a.apellidos} ${a.nombre}`);
+          return tokens.every(t => hay.includes(t));
+        });
+
+    renderCards(filtrados, buscando);
+    renderTabla(filtrados, buscando);
+    attachEventos();
+
+    const countEl = document.getElementById('buscar-contador');
+    if (buscando) {
+      countEl.textContent = `${filtrados.length} / ${alumnosTodos.length}`;
+      countEl.style.display = '';
+    } else {
+      countEl.style.display = 'none';
+    }
+  }
+
   // ── Modal ────────────────────────────────────────────
   const overlay = document.getElementById('modal-overlay');
 
@@ -362,6 +427,7 @@
     document.getElementById('btn-guardar').disabled = false;
   }
 
+  document.getElementById('inp-buscar').addEventListener('input', filtrarYRenderizar);
   document.getElementById('btn-abrir-modal').addEventListener('click', abrirModal);
   document.getElementById('btn-cerrar-modal').addEventListener('click', cerrarModal);
   document.getElementById('btn-cancelar').addEventListener('click', cerrarModal);
@@ -431,10 +497,12 @@
       : '<span class="badge badge-gray">— Pendiente</span>';
   }
 
-  function renderCards(alumnos) {
+  function renderCards(alumnos, buscando = false) {
     const cont = document.getElementById('lista-cards');
     if (!alumnos.length) {
-      cont.innerHTML = '<p style="text-align:center;color:var(--muted);padding:2rem 0">No hay alumnos todavía.<br>Pulsa <strong>"+ Añadir alumno"</strong> para empezar.</p>';
+      cont.innerHTML = buscando
+        ? '<p style="text-align:center;color:var(--muted);padding:2rem 0">No se encontraron alumnos que coincidan con la búsqueda.</p>'
+        : '<p style="text-align:center;color:var(--muted);padding:2rem 0">No hay alumnos todavía.<br>Pulsa <strong>"+ Añadir alumno"</strong> para empezar.</p>';
       return;
     }
     cont.innerHTML = alumnos.map(a => `
@@ -464,10 +532,11 @@
     `).join('');
   }
 
-  function renderTabla(alumnos) {
+  function renderTabla(alumnos, buscando = false) {
     const tbody = document.getElementById('cuerpo-tabla');
     if (!alumnos.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No hay alumnos todavía.</td></tr>';
+      const msg = buscando ? 'No se encontraron alumnos que coincidan.' : 'No hay alumnos todavía.';
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">${msg}</td></tr>`;
       return;
     }
     tbody.innerHTML = alumnos.map(a => `
@@ -497,10 +566,8 @@
 
   async function cargarAlumnos() {
     const res = await fetch('/api/alumnos');
-    const alumnos = await res.json();
-    renderCards(alumnos);
-    renderTabla(alumnos);
-    attachEventos();
+    alumnosTodos = await res.json();
+    filtrarYRenderizar();
   }
 
   function attachEventos() {
