@@ -71,6 +71,10 @@ app.post('/api/alumnos', requireLogin, (req, res) => {
     return res.status(400).json({ error: 'Datos incompletos' });
   }
 
+  if (num_caterings > num_entradas) {
+    return res.status(400).json({ error: 'El número de caterings no puede superar al de entradas' });
+  }
+
   const db = leer();
   const alumnoId = uuidv4();
 

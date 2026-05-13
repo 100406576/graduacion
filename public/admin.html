@@ -3,108 +3,346 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Panel Admin — Entradas Graduación</title>
+  <title>Panel Admin — Graduación 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #f8f9fa; }
-    #toast-copiado { position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 9999; max-width: 340px; margin: 0 auto; }
-    @media (min-width: 576px) { #toast-copiado { left: auto; right: 2rem; } }
-    .alumno-card { border-radius: 12px; margin-bottom: 0.75rem; }
-    .alumno-card .nombre { font-size: 1.05rem; font-weight: 700; }
+    :root {
+      --navy:       #0f2b4c;
+      --blue:       #1d4ed8;
+      --blue-light: #eff6ff;
+      --bg:         #f1f5f9;
+      --surface:    #ffffff;
+      --border:     #cbd5e1;
+      --text:       #0f172a;
+      --muted:      #64748b;
+    }
+
+    body { background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); }
+
+    /* ── Navbar ── */
+    .topbar {
+      background: var(--navy);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+      padding: 0.7rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .topbar-brand {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.2px;
+      margin-right: auto;
+      white-space: nowrap;
+    }
+    .topbar-brand span { opacity: 0.6; font-weight: 400; }
+
+    /* Botón Validar destacado */
+    .btn-validar {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #fff;
+      color: var(--navy);
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-validar:hover { background: #e0e7ff; color: var(--navy); }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-top {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.35);
+      color: rgba(255,255,255,0.85);
+      border-radius: 7px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.82rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-top:hover { border-color: rgba(255,255,255,0.7); color: #fff; }
+
+    /* Banner validar en móvil */
+    .validar-banner {
+      background: var(--blue);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .validar-banner p { color: rgba(255,255,255,0.85); font-size: 0.85rem; margin: 0; }
+    .validar-banner a {
+      background: #fff;
+      color: var(--blue);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Contenido ── */
+    .page { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .section-title { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Botón añadir */
+    .btn-add {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1.1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-add:hover { background: #1e40af; }
+
+    /* ── Tabla escritorio ── */
+    .tabla-wrap { background: var(--surface); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.07); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    thead th { background: var(--navy); color: #fff; padding: 0.85rem 1rem; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.4px; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--blue-light); }
+    td { padding: 0.85rem 1rem; vertical-align: middle; }
+    td.nombre { font-weight: 600; }
+
+    /* ── Cards móvil ── */
+    .alumno-card {
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+    }
+    .alumno-card-body { padding: 1rem; }
+    .alumno-nombre { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .alumno-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0 0.9rem; }
+    .alumno-actions { display: flex; gap: 0.5rem; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      border-radius: 20px; padding: 0.25rem 0.7rem;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .badge-blue    { background: var(--blue-light); color: var(--blue); }
+    .badge-amber   { background: #fffbeb; color: #92400e; }
+    .badge-green   { background: #f0fdf4; color: #166534; }
+    .badge-gray    { background: #f1f5f9; color: var(--muted); }
+
+    /* ── Botones de acción ── */
+    .btn-link-action {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-link-action:hover { background: #1e40af; color: #fff; }
+
+    .btn-ver {
+      background: transparent;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 7px;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.12s;
+    }
+    .btn-ver:hover { background: var(--blue-light); }
+
+    .btn-danger {
+      background: transparent;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      border-radius: 7px;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .btn-danger:hover:not(:disabled) { background: #fef2f2; }
+    .btn-danger:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Modal ── */
+    .modal-content { border-radius: 16px; overflow: hidden; border: none; }
+    .modal-header-custom { background: var(--navy); padding: 1.1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header-custom h5 { color: #fff; font-weight: 700; font-size: 1.05rem; margin: 0; }
+    .modal-close { background: none; border: none; color: rgba(255,255,255,0.7); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 0; }
+    .modal-close:hover { color: #fff; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.35rem; }
+    .form-group input {
+      width: 100%; padding: 0.7rem 0.9rem;
+      font-size: 0.95rem; font-family: 'Inter', sans-serif;
+      border: 1.5px solid var(--border); border-radius: 9px;
+      outline: none; transition: border-color 0.2s;
+      color: var(--text);
+    }
+    .form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
+    .form-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+    .form-error-inline { font-size: 0.78rem; color: #dc2626; margin-top: 0.25rem; display: none; }
+
+    .modal-footer-custom { padding: 1rem 1.25rem; display: flex; gap: 0.6rem; background: #f8fafc; border-top: 1px solid var(--border); }
+    .btn-cancel {
+      flex: 1; padding: 0.7rem; background: #fff; color: var(--muted);
+      border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 0.95rem; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .btn-cancel:hover { border-color: #94a3b8; }
+    .btn-save {
+      flex: 1; padding: 0.7rem; background: var(--blue); color: #fff;
+      border: none; border-radius: 9px;
+      font-size: 0.95rem; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-save:hover { background: #1e40af; }
+    .btn-save:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .modal-error { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.85rem; margin-bottom: 0.5rem; display: none; }
+
+    /* ── Toast ── */
+    #toast-copiado { position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 9999; max-width: 300px; margin: 0 auto; }
+    @media (min-width: 576px) { #toast-copiado { left: auto; } }
+
+    /* ── Modal overlay ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1040; display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--surface); border-radius: 16px; width: 100%; max-width: 460px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.22); }
   </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-primary">
-  <div class="container-fluid px-3">
-    <span class="navbar-brand fw-bold me-auto" style="font-size:1rem">🎓 Panel Admin — Graduación</span>
-    <div class="d-flex gap-2 flex-shrink-0 align-items-center">
-      <a href="/validar" target="_blank" class="btn btn-warning btn-sm fw-bold">📷 Validar</a>
-      <button class="btn btn-outline-light btn-sm" onclick="exportar()">⬇ Exportar</button>
-      <label class="btn btn-outline-light btn-sm mb-0" style="cursor:pointer">
-        ⬆ Importar<input type="file" id="inp-importar" accept=".json" style="display:none">
-      </label>
-      <form method="POST" action="/logout" class="m-0">
-        <button type="submit" class="btn btn-outline-light btn-sm">Salir</button>
-      </form>
-    </div>
+<!-- Navbar -->
+<div class="topbar">
+  <span class="topbar-brand">🎓 Graduación <span>2026 · Admin</span></span>
+  <div class="topbar-actions">
+    <a href="/validar" target="_blank" class="btn-validar">📷 Abrir escáner</a>
+    <button class="btn-top" onclick="exportar()">⬇ Exportar</button>
+    <label class="btn-top" style="cursor:pointer; margin:0">
+      ⬆ Importar<input type="file" id="inp-importar" accept=".json" style="display:none">
+    </label>
+    <form method="POST" action="/logout" style="margin:0">
+      <button type="submit" class="btn-top">Salir</button>
+    </form>
   </div>
-</nav>
+</div>
 
-<div class="container-fluid px-3 py-3" style="max-width:960px">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h6 class="mb-0 text-secondary">Alumnos y entradas</h6>
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAlumno">
-      + Añadir alumno
-    </button>
+<!-- Banner validar (solo móvil) -->
+<div class="validar-banner d-md-none">
+  <p>¿Día del evento? Abre el escáner de entradas</p>
+  <a href="/validar" target="_blank">📷 Validar</a>
+</div>
+
+<div class="page">
+  <div class="section-header">
+    <span class="section-title">Alumnos y entradas</span>
+    <button class="btn-add" id="btn-abrir-modal">+ Añadir alumno</button>
   </div>
 
   <!-- Vista móvil: tarjetas -->
   <div id="lista-cards" class="d-md-none"></div>
 
   <!-- Vista escritorio: tabla -->
-  <div class="card shadow-sm d-none d-md-block">
-    <div class="card-body p-0">
-      <table class="table table-hover mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Alumno</th>
-            <th class="text-center">Entradas</th>
-            <th class="text-center">Caterings</th>
-            <th class="text-center">Estado</th>
-            <th>Enlace para la familia</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="cuerpo-tabla">
-          <tr><td colspan="6" class="text-center text-muted py-4">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="tabla-wrap d-none d-md-block">
+    <table>
+      <thead>
+        <tr>
+          <th>Alumno</th>
+          <th style="text-align:center">Entradas</th>
+          <th style="text-align:center">Caterings</th>
+          <th style="text-align:center">Estado</th>
+          <th>Enlace familia</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo-tabla">
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Cargando...</td></tr>
+      </tbody>
+    </table>
   </div>
-
-  <p class="text-muted mt-3 small d-none d-md-block">
-    El enlace de la familia abre su página con el QR para imprimir. Compártelo por WhatsApp o email.
-  </p>
 </div>
 
 <!-- Modal añadir alumno -->
-<div class="modal fade" id="modalAlumno" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">Añadir alumno</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header-custom">
+      <h5>Añadir alumno</h5>
+      <button class="modal-close" id="btn-cerrar-modal">✕</button>
+    </div>
+    <div style="padding:1.25rem 1.25rem 0">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="inp-nombre" placeholder="Ej: Ana" autocomplete="off">
       </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label fw-bold">Nombre</label>
-          <input type="text" class="form-control form-control-lg" id="inp-nombre"
-            placeholder="Ej: Ana" autocomplete="off">
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-bold">Apellidos</label>
-          <input type="text" class="form-control form-control-lg" id="inp-apellidos"
-            placeholder="Ej: García López" autocomplete="off">
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-bold">Número de entradas</label>
-          <input type="number" class="form-control form-control-lg" id="inp-entradas"
-            min="1" max="20" value="3" inputmode="numeric">
-          <div class="form-text">Personas que asistirán a la graduación.</div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-bold">Número de caterings</label>
-          <input type="number" class="form-control form-control-lg" id="inp-caterings"
-            min="0" max="20" value="3" inputmode="numeric">
-          <div class="form-text">Personas que participarán en el catering.</div>
-        </div>
-        <div id="error-modal" class="alert alert-danger d-none"></div>
+      <div class="form-group">
+        <label>Apellidos</label>
+        <input type="text" id="inp-apellidos" placeholder="Ej: García López" autocomplete="off">
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-lg flex-fill" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-success btn-lg flex-fill" id="btn-guardar">Guardar</button>
+      <div class="form-group">
+        <label>Número de entradas</label>
+        <input type="number" id="inp-entradas" min="1" max="20" value="3" inputmode="numeric">
+        <p class="form-hint">Personas que asistirán a la graduación.</p>
       </div>
+      <div class="form-group">
+        <label>Número de caterings</label>
+        <input type="number" id="inp-caterings" min="0" max="20" value="3" inputmode="numeric">
+        <p class="form-hint">Personas que participarán en el catering.</p>
+        <p class="form-error-inline" id="error-caterings">No puede ser mayor que el número de entradas.</p>
+      </div>
+      <div class="modal-error" id="error-modal"></div>
+    </div>
+    <div class="modal-footer-custom">
+      <button class="btn-cancel" id="btn-cancelar">Cancelar</button>
+      <button class="btn-save" id="btn-guardar">Guardar</button>
     </div>
   </div>
 </div>
@@ -112,7 +350,7 @@
 <!-- Toast copiado -->
 <div id="toast-copiado" class="toast align-items-center text-bg-success border-0" role="alert">
   <div class="d-flex">
-    <div class="toast-body fs-6">✓ Enlace copiado al portapapeles</div>
+    <div class="toast-body">✓ Enlace copiado al portapapeles</div>
   </div>
 </div>
 
@@ -122,37 +360,112 @@
   const toastEl = document.getElementById('toast-copiado');
   const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
 
+  // ── Modal ────────────────────────────────────────────
+  const overlay = document.getElementById('modal-overlay');
+
+  function abrirModal() { overlay.classList.add('open'); document.getElementById('inp-nombre').focus(); }
+  function cerrarModal() {
+    overlay.classList.remove('open');
+    document.getElementById('inp-nombre').value    = '';
+    document.getElementById('inp-apellidos').value = '';
+    document.getElementById('inp-entradas').value  = '3';
+    document.getElementById('inp-caterings').value = '3';
+    document.getElementById('error-modal').style.display = 'none';
+    document.getElementById('error-caterings').style.display = 'none';
+    document.getElementById('btn-guardar').disabled = false;
+  }
+
+  document.getElementById('btn-abrir-modal').addEventListener('click', abrirModal);
+  document.getElementById('btn-cerrar-modal').addEventListener('click', cerrarModal);
+  document.getElementById('btn-cancelar').addEventListener('click', cerrarModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrarModal(); });
+
+  // ── Validación caterings en tiempo real ──────────────
+  function validarCaterings() {
+    const entradas = parseInt(document.getElementById('inp-entradas').value) || 0;
+    const caterings = parseInt(document.getElementById('inp-caterings').value) || 0;
+    const errEl = document.getElementById('error-caterings');
+    const guardarEl = document.getElementById('btn-guardar');
+    if (caterings > entradas) {
+      errEl.style.display = 'block';
+      guardarEl.disabled = true;
+    } else {
+      errEl.style.display = 'none';
+      guardarEl.disabled = false;
+    }
+  }
+
+  document.getElementById('inp-caterings').addEventListener('input', validarCaterings);
+  document.getElementById('inp-entradas').addEventListener('input', () => {
+    const max = parseInt(document.getElementById('inp-entradas').value) || 20;
+    document.getElementById('inp-caterings').max = max;
+    validarCaterings();
+  });
+
+  // ── Guardar alumno ────────────────────────────────────
+  document.getElementById('btn-guardar').addEventListener('click', async () => {
+    const nombre    = document.getElementById('inp-nombre').value.trim();
+    const apellidos = document.getElementById('inp-apellidos').value.trim();
+    const num       = parseInt(document.getElementById('inp-entradas').value);
+    const cat       = parseInt(document.getElementById('inp-caterings').value) || 0;
+    const errorDiv  = document.getElementById('error-modal');
+
+    if (!nombre || !apellidos || !num || num < 1) {
+      errorDiv.textContent = 'Por favor rellena todos los campos correctamente.';
+      errorDiv.style.display = 'block'; return;
+    }
+    if (cat > num) {
+      errorDiv.textContent = 'El número de caterings no puede superar al de entradas.';
+      errorDiv.style.display = 'block'; return;
+    }
+    errorDiv.style.display = 'none';
+
+    const res = await fetch('/api/alumnos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, apellidos, num_entradas: num, num_caterings: cat })
+    });
+    const data = await res.json();
+    if (!res.ok) { errorDiv.textContent = data.error; errorDiv.style.display = 'block'; return; }
+
+    cerrarModal();
+    cargarAlumnos();
+  });
+
+  document.getElementById('modal-overlay').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-guardar').click();
+    if (e.key === 'Escape') cerrarModal();
+  });
+
+  // ── Render ────────────────────────────────────────────
   function badgeEstado(usada) {
     return usada
-      ? '<span class="badge bg-success">✓ Usada</span>'
-      : '<span class="badge bg-secondary">— Pendiente</span>';
+      ? '<span class="badge badge-green">✓ Usada</span>'
+      : '<span class="badge badge-gray">— Pendiente</span>';
   }
 
   function renderCards(alumnos) {
     const cont = document.getElementById('lista-cards');
     if (!alumnos.length) {
-      cont.innerHTML = '<p class="text-center text-muted py-4">No hay alumnos todavía.<br>Pulsa <strong>"+ Añadir alumno"</strong> para empezar.</p>';
+      cont.innerHTML = '<p style="text-align:center;color:var(--muted);padding:2rem 0">No hay alumnos todavía.<br>Pulsa <strong>"+ Añadir alumno"</strong> para empezar.</p>';
       return;
     }
     cont.innerHTML = alumnos.map(a => `
-      <div class="card alumno-card shadow-sm">
-        <div class="card-body py-3 px-3">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="nombre">${a.apellidos}, ${a.nombre}</div>
-            <button class="btn btn-outline-danger btn-sm ms-2 btn-borrar"
-              data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
+      <div class="alumno-card">
+        <div class="alumno-card-body">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="alumno-nombre">${a.apellidos}, ${a.nombre}</div>
+            <button class="btn-danger btn-borrar" data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
               ${a.usada ? 'disabled title="Entrada ya usada"' : ''}>🗑</button>
           </div>
-          <div class="d-flex flex-wrap gap-2 mt-2 mb-3">
-            <span class="badge bg-primary">${a.num_entradas} entradas</span>
-            <span class="badge bg-warning text-dark">${a.num_caterings} caterings</span>
+          <div class="alumno-badges">
+            <span class="badge badge-blue">🎓 ${a.num_entradas} entradas</span>
+            <span class="badge badge-amber">🍽️ ${a.num_caterings} caterings</span>
             ${badgeEstado(a.usada)}
           </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-primary flex-fill btn-copiar" data-url="${BASE}/entrada/${a.token}">
-              📋 Copiar enlace
-            </button>
-            <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn btn-outline-secondary">Ver</a>
+          <div class="alumno-actions">
+            <button class="btn-link-action btn-copiar" data-url="${BASE}/entrada/${a.token}" style="flex:1">📋 Copiar enlace</button>
+            <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn-ver">Ver</a>
           </div>
         </div>
       </div>
@@ -162,24 +475,21 @@
   function renderTabla(alumnos) {
     const tbody = document.getElementById('cuerpo-tabla');
     if (!alumnos.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos todavía. Pulsa "Añadir alumno" para empezar.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No hay alumnos todavía.</td></tr>';
       return;
     }
     tbody.innerHTML = alumnos.map(a => `
       <tr>
-        <td class="fw-bold">${a.apellidos}, ${a.nombre}</td>
-        <td class="text-center"><span class="badge bg-primary">${a.num_entradas}</span></td>
-        <td class="text-center"><span class="badge bg-warning text-dark">${a.num_caterings}</span></td>
-        <td class="text-center">${badgeEstado(a.usada)}</td>
+        <td class="nombre">${a.apellidos}, ${a.nombre}</td>
+        <td style="text-align:center"><span class="badge badge-blue">${a.num_entradas}</span></td>
+        <td style="text-align:center"><span class="badge badge-amber">${a.num_caterings}</span></td>
+        <td style="text-align:center">${badgeEstado(a.usada)}</td>
         <td>
-          <button class="btn btn-outline-primary btn-sm btn-copiar" data-url="${BASE}/entrada/${a.token}">
-            📋 Copiar enlace
-          </button>
-          <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn btn-link btn-sm">Ver</a>
+          <button class="btn-link-action btn-copiar" data-url="${BASE}/entrada/${a.token}">📋 Copiar</button>
+          <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn-ver" style="margin-left:0.4rem">Ver</a>
         </td>
         <td>
-          <button class="btn btn-outline-danger btn-sm btn-borrar"
-            data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
+          <button class="btn-danger btn-borrar" data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
             ${a.usada ? 'disabled title="Entrada ya usada"' : ''}>🗑</button>
         </td>
       </tr>
@@ -215,73 +525,30 @@
     cargarAlumnos();
   }
 
-  document.getElementById('btn-guardar').addEventListener('click', async () => {
-    const nombre    = document.getElementById('inp-nombre').value.trim();
-    const apellidos = document.getElementById('inp-apellidos').value.trim();
-    const num       = parseInt(document.getElementById('inp-entradas').value);
-    const cat       = parseInt(document.getElementById('inp-caterings').value) || 0;
-    const errorDiv  = document.getElementById('error-modal');
-
-    if (!nombre || !apellidos || !num || num < 1) {
-      errorDiv.textContent = 'Por favor rellena todos los campos correctamente.';
-      errorDiv.classList.remove('d-none');
-      return;
-    }
-    errorDiv.classList.add('d-none');
-
-    const res = await fetch('/api/alumnos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, apellidos, num_entradas: num, num_caterings: cat })
-    });
-
-    if (res.ok) {
-      bootstrap.Modal.getInstance(document.getElementById('modalAlumno')).hide();
-      document.getElementById('inp-nombre').value    = '';
-      document.getElementById('inp-apellidos').value = '';
-      document.getElementById('inp-entradas').value  = '3';
-      document.getElementById('inp-caterings').value = '3';
-      cargarAlumnos();
-    }
-  });
-
-  document.getElementById('modalAlumno').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('btn-guardar').click();
-  });
-
   function exportar() {
-    fetch('/api/backup')
-      .then(r => r.blob())
-      .then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'graduacion_backup.json';
-        a.click();
-        URL.revokeObjectURL(url);
-      });
+    fetch('/api/backup').then(r => r.blob()).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'graduacion_backup.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
   }
 
   document.getElementById('inp-importar').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!confirm(`¿Importar "${file.name}"? Esto reemplazará todos los datos actuales.`)) {
-      e.target.value = ''; return;
-    }
+    if (!confirm(`¿Importar "${file.name}"? Reemplazará todos los datos actuales.`)) { e.target.value = ''; return; }
     try {
       const datos = JSON.parse(await file.text());
       const res = await fetch('/api/importar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos)
       });
       const result = await res.json();
       if (result.error) { alert('Error: ' + result.error); return; }
       alert(`✓ Importados ${result.alumnos} alumnos.`);
       cargarAlumnos();
-    } catch {
-      alert('El fichero no es válido. Asegúrate de que es un backup exportado desde esta aplicación.');
-    }
+    } catch { alert('El fichero no es válido.'); }
     e.target.value = '';
   });
 
