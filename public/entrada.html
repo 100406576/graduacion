@@ -130,7 +130,7 @@
     const datos = await res.json();
     const html = datos.entradas.map(e => `
       <div class="entrada-card">
-        <div class="entrada-header">🎓 Graduación 2025</div>
+        <div class="entrada-header">🎓 Graduación 2026</div>
         <div style="font-size:0.8rem;color:#888;text-transform:uppercase;letter-spacing:1px;margin:0.3rem 0 0.5rem">
           Entrada para el acto de graduación
         </div>
@@ -139,8 +139,9 @@
         <img src="${e.qr}" class="qr-imagen" alt="Código QR entrada ${e.numero}">
         ${e.usada ? '<div class="usada-badge">⚠ ESTA ENTRADA YA FUE USADA</div>' : ''}
         <div class="evento-info">
-          Presenta este código QR en la entrada el día del acto.<br>
-          <strong>No compartas esta entrada.</strong>
+          📅 16 de junio de 2026 · 18:30h<br>
+          📍 Casa de la Cultura — Carranque<br>
+          <small>Presenta este QR en la entrada. <strong>No compartas esta entrada.</strong></small>
         </div>
       </div>
     `).join('');
