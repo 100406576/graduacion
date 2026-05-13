@@ -268,8 +268,8 @@
 </div>
 
 <div class="btn-print-wrap" id="btn-imprimir" style="display:none">
-  <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
-  <p class="print-hint">En el diálogo elige "Guardar como PDF" para guardarlo en el dispositivo.</p>
+  <button class="btn-print" id="btn-guardar-entrada">📤 Guardar / Compartir entrada</button>
+  <p class="print-hint" id="print-hint-text">Guarda la entrada en tu dispositivo o compártela por WhatsApp, email…</p>
 </div>
 
 <style>
@@ -278,6 +278,22 @@
 
 <script>
   const token = window.location.pathname.split('/').pop();
+
+  document.getElementById('btn-guardar-entrada').addEventListener('click', async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Entrada de Graduación 2026',
+          text: 'Aquí tienes tu entrada para el acto de graduación.',
+          url: window.location.href
+        });
+      } catch (e) { /* usuario canceló */ }
+    } else {
+      // Escritorio sin share API: guardar como PDF via print
+      document.getElementById('print-hint-text').textContent = 'En el diálogo elige "Guardar como PDF".';
+      window.print();
+    }
+  });
 
   async function cargar() {
     const res = await fetch(`/api/entrada/${token}`);
