@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel Admin — Entradas Graduación</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f8f9fa; }
+    #toast-copiado { position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 9999; max-width: 340px; margin: 0 auto; }
+    @media (min-width: 576px) {
+      #toast-copiado { left: auto; right: 2rem; }
+    }
+
+    /* Tarjetas de alumno (vista móvil) */
+    .alumno-card { border-radius: 12px; margin-bottom: 0.75rem; }
+    .alumno-card .nombre { font-size: 1.05rem; font-weight: 700; }
+    .alumno-card .badges span { font-size: 0.78rem; }
+    .alumno-card .acciones { gap: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-primary">
+  <div class="container-fluid px-3">
+    <span class="navbar-brand fw-bold me-auto" style="font-size:1rem">🎓 Panel Admin — Graduación</span>
+    <div class="d-flex gap-2 flex-shrink-0">
+      <a href="/validar" target="_blank" class="btn btn-warning btn-sm fw-bold">📷 Validar</a>
+      <a href="/api/backup" class="btn btn-outline-light btn-sm">⬇</a>
+      <form method="POST" action="/logout" class="m-0">
+        <button type="submit" class="btn btn-outline-light btn-sm">Salir</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-3 py-3" style="max-width:900px">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="mb-0 text-secondary">Alumnos y entradas</h6>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAlumno">
+      + Añadir alumno
+    </button>
+  </div>
+
+  <!-- Vista móvil: tarjetas -->
+  <div id="lista-cards" class="d-md-none"></div>
+
+  <!-- Vista escritorio: tabla -->
+  <div class="card shadow-sm d-none d-md-block">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0" id="tabla-alumnos">
+        <thead class="table-light">
+          <tr>
+            <th>Alumno</th>
+            <th class="text-center">Total</th>
+            <th class="text-center">Descargadas</th>
+            <th class="text-center">Usadas</th>
+            <th>Enlace para la familia</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-tabla">
+          <tr><td colspan="6" class="text-center text-muted py-4">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="text-muted mt-3 small d-none d-md-block">
+    El enlace de la familia abre su página con los QR para imprimir.
+    Compártelo por WhatsApp o email.
+  </p>
+</div>
+
+<!-- Modal añadir alumno -->
+<div class="modal fade" id="modalAlumno" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Añadir alumno</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Nombre</label>
+          <input type="text" class="form-control form-control-lg" id="inp-nombre"
+            placeholder="Ej: Ana" autocomplete="off">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Apellidos</label>
+          <input type="text" class="form-control form-control-lg" id="inp-apellidos"
+            placeholder="Ej: García López" autocomplete="off">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Número de entradas</label>
+          <input type="number" class="form-control form-control-lg" id="inp-entradas"
+            min="1" max="20" value="3" inputmode="numeric">
+          <div class="form-text">Cuántas entradas recibirá esta familia.</div>
+        </div>
+        <div id="error-modal" class="alert alert-danger d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary flex-fill" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success btn-lg flex-fill" id="btn-guardar">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast copiado -->
+<div id="toast-copiado" class="toast align-items-center text-bg-success border-0" role="alert">
+  <div class="d-flex">
+    <div class="toast-body fs-6">✓ Enlace copiado al portapapeles</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const BASE = window.location.origin;
+  const toastEl = document.getElementById('toast-copiado');
+  const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+
+  function badgeDescargadas(n) {
+    return n > 0
+      ? `<span class="badge bg-success">${n}</span>`
+      : `<span class="badge bg-secondary">0</span>`;
+  }
+  function badgeUsadas(n) {
+    return n > 0
+      ? `<span class="badge bg-primary">${n}</span>`
+      : `<span class="badge bg-secondary">0</span>`;
+  }
+
+  function renderCards(alumnos) {
+    const cont = document.getElementById('lista-cards');
+    if (!alumnos.length) {
+      cont.innerHTML = '<p class="text-center text-muted py-4">No hay alumnos todavía.<br>Pulsa <strong>"+ Añadir alumno"</strong> para empezar.</p>';
+      return;
+    }
+    cont.innerHTML = alumnos.map(a => `
+      <div class="card alumno-card shadow-sm">
+        <div class="card-body py-3 px-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="nombre">${a.apellidos}, ${a.nombre}</div>
+            <button class="btn btn-outline-danger btn-sm ms-2"
+              onclick="eliminarAlumno('${a.id}', '${a.nombre} ${a.apellidos}')"
+              ${a.usadas > 0 ? 'disabled title="Tiene entradas ya usadas"' : ''}>🗑</button>
+          </div>
+          <div class="badges d-flex gap-2 mt-2 mb-3">
+            <span class="badge bg-dark">${a.total_entradas} entradas</span>
+            ${badgeDescargadas(a.descargadas)} descargadas
+            ${badgeUsadas(a.usadas)} usadas
+          </div>
+          <div class="acciones d-flex">
+            <button class="btn btn-primary flex-fill me-2"
+              onclick="copiarEnlace('${BASE}/entrada/${a.token}')">
+              📋 Copiar enlace
+            </button>
+            <a href="${BASE}/entrada/${a.token}" target="_blank"
+              class="btn btn-outline-secondary">Ver</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderTabla(alumnos) {
+    const tbody = document.getElementById('cuerpo-tabla');
+    if (!alumnos.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos todavía. Pulsa "Añadir alumno" para empezar.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = alumnos.map(a => `
+      <tr>
+        <td class="fw-bold">${a.apellidos}, ${a.nombre}</td>
+        <td class="text-center">${a.total_entradas}</td>
+        <td class="text-center">${badgeDescargadas(a.descargadas)}</td>
+        <td class="text-center">${badgeUsadas(a.usadas)}</td>
+        <td>
+          <button class="btn btn-outline-primary btn-sm"
+            onclick="copiarEnlace('${BASE}/entrada/${a.token}')">
+            📋 Copiar enlace
+          </button>
+          <a href="${BASE}/entrada/${a.token}" target="_blank"
+            class="btn btn-link btn-sm">Ver</a>
+        </td>
+        <td>
+          <button class="btn btn-outline-danger btn-sm"
+            onclick="eliminarAlumno('${a.id}', '${a.nombre} ${a.apellidos}')"
+            ${a.usadas > 0 ? 'disabled title="Tiene entradas ya usadas"' : ''}>🗑</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function cargarAlumnos() {
+    const res = await fetch('/api/alumnos');
+    const alumnos = await res.json();
+    renderCards(alumnos);
+    renderTabla(alumnos);
+  }
+
+  function copiarEnlace(url) {
+    navigator.clipboard.writeText(url).then(() => toast.show());
+  }
+
+  async function eliminarAlumno(id, nombre) {
+    if (!confirm(`¿Eliminar a ${nombre} y todas sus entradas?`)) return;
+    const res = await fetch(`/api/alumnos/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+    cargarAlumnos();
+  }
+
+  document.getElementById('btn-guardar').addEventListener('click', async () => {
+    const nombre = document.getElementById('inp-nombre').value.trim();
+    const apellidos = document.getElementById('inp-apellidos').value.trim();
+    const num = parseInt(document.getElementById('inp-entradas').value);
+    const errorDiv = document.getElementById('error-modal');
+
+    if (!nombre || !apellidos || !num || num < 1) {
+      errorDiv.textContent = 'Por favor rellena todos los campos correctamente.';
+      errorDiv.classList.remove('d-none');
+      return;
+    }
+    errorDiv.classList.add('d-none');
+
+    const res = await fetch('/api/alumnos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, apellidos, num_entradas: num })
+    });
+
+    if (res.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('modalAlumno')).hide();
+      document.getElementById('inp-nombre').value = '';
+      document.getElementById('inp-apellidos').value = '';
+      document.getElementById('inp-entradas').value = '3';
+      cargarAlumnos();
+    }
+  });
+
+  document.getElementById('modalAlumno').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-guardar').click();
+  });
+
+  cargarAlumnos();
+</script>
+</body>
+</html>
