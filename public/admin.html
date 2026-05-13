@@ -24,9 +24,12 @@
 <nav class="navbar navbar-dark bg-primary">
   <div class="container-fluid px-3">
     <span class="navbar-brand fw-bold me-auto" style="font-size:1rem">🎓 Panel Admin — Graduación</span>
-    <div class="d-flex gap-2 flex-shrink-0">
+    <div class="d-flex gap-2 flex-shrink-0 align-items-center">
       <a href="/validar" target="_blank" class="btn btn-warning btn-sm fw-bold">📷 Validar</a>
-      <a href="/api/backup" class="btn btn-outline-light btn-sm">⬇</a>
+      <button class="btn btn-outline-light btn-sm" onclick="exportar()" title="Exportar datos">⬇ Exportar</button>
+      <label class="btn btn-outline-light btn-sm mb-0" title="Importar datos" style="cursor:pointer">
+        ⬆ Importar<input type="file" id="inp-importar" accept=".json" style="display:none">
+      </label>
       <form method="POST" action="/logout" class="m-0">
         <button type="submit" class="btn btn-outline-light btn-sm">Salir</button>
       </form>
@@ -257,6 +260,44 @@
 
   document.getElementById('modalAlumno').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('btn-guardar').click();
+  });
+
+  function exportar() {
+    fetch('/api/backup')
+      .then(r => r.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'graduacion_backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+  }
+
+  document.getElementById('inp-importar').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!confirm(`¿Importar "${file.name}"? Esto reemplazará todos los datos actuales.`)) {
+      e.target.value = '';
+      return;
+    }
+    try {
+      const texto = await file.text();
+      const datos = JSON.parse(texto);
+      const res = await fetch('/api/importar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      });
+      const result = await res.json();
+      if (result.error) { alert('Error: ' + result.error); return; }
+      alert(`✓ Importados ${result.alumnos} alumnos y ${result.entradas} entradas.`);
+      cargarAlumnos();
+    } catch {
+      alert('El fichero no es válido. Asegúrate de que es un backup exportado desde esta aplicación.');
+    }
+    e.target.value = '';
   });
 
   cargarAlumnos();

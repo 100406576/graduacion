@@ -189,9 +189,18 @@ app.post('/api/validar', (req, res) => {
   });
 });
 
-// ── Backup ───────────────────────────────────────────────
+// ── Backup / Importar ────────────────────────────────────
 app.get('/api/backup', requireLogin, (req, res) => {
   res.download(DB_PATH, 'graduacion_backup.json');
+});
+
+app.post('/api/importar', requireLogin, (req, res) => {
+  const datos = req.body;
+  if (!Array.isArray(datos.alumnos) || !Array.isArray(datos.entradas)) {
+    return res.status(400).json({ error: 'Fichero no válido' });
+  }
+  guardar(datos);
+  res.json({ ok: true, alumnos: datos.alumnos.length, entradas: datos.entradas.length });
 });
 
 app.listen(PORT, () => {
