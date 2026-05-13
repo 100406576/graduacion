@@ -110,10 +110,16 @@
 <script>
   let escaner = null;
   let procesando = false;
+  let arrancado = false;
 
   async function iniciarEscaner() {
     procesando = false;
-    document.getElementById('reader').innerHTML = '';
+
+    // Si ya está arrancado, solo reanudar — sin destruir ni recrear
+    if (arrancado) {
+      try { escaner.resume(); } catch (_) {}
+      return;
+    }
 
     escaner = new Html5Qrcode('reader');
     try {
@@ -123,6 +129,7 @@
         onEscaneo,
         () => {}
       );
+      arrancado = true;
     } catch {
       document.getElementById('reader').innerHTML =
         '<p style="color:#f87171;padding:1.5rem;text-align:center">No se pudo acceder a la cámara.<br>Comprueba que has dado permiso.</p>';
@@ -133,7 +140,8 @@
     if (procesando) return;
     procesando = true;
 
-    try { await escaner.stop(); } catch (_) {}
+    // Pausar detección sin apagar la cámara
+    try { escaner.pause(); } catch (_) {}
 
     const res = await fetch('/api/validar', {
       method: 'POST',
@@ -142,7 +150,6 @@
     });
     const datos = await res.json();
 
-    // Ocultar escáner, mostrar resultado
     document.getElementById('vista-scanner').style.display = 'none';
     const vr = document.getElementById('vista-resultado');
 
