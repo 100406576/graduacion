@@ -143,8 +143,9 @@
         <div class="card-body py-3 px-3">
           <div class="d-flex justify-content-between align-items-start">
             <div class="nombre">${a.apellidos}, ${a.nombre}</div>
-            <button class="btn btn-outline-danger btn-sm ms-2"
-              onclick="eliminarAlumno('${a.id}', '${a.nombre} ${a.apellidos}')"
+            <button class="btn btn-outline-danger btn-sm ms-2 btn-borrar"
+              data-id="${a.id}"
+              data-nombre="${a.nombre} ${a.apellidos}"
               ${a.usadas > 0 ? 'disabled title="Tiene entradas ya usadas"' : ''}>🗑</button>
           </div>
           <div class="badges d-flex gap-2 mt-2 mb-3">
@@ -153,8 +154,8 @@
             ${badgeUsadas(a.usadas)} usadas
           </div>
           <div class="acciones d-flex">
-            <button class="btn btn-primary flex-fill me-2"
-              onclick="copiarEnlace('${BASE}/entrada/${a.token}')">
+            <button class="btn btn-primary flex-fill me-2 btn-copiar"
+              data-url="${BASE}/entrada/${a.token}">
               📋 Copiar enlace
             </button>
             <a href="${BASE}/entrada/${a.token}" target="_blank"
@@ -178,16 +179,17 @@
         <td class="text-center">${badgeDescargadas(a.descargadas)}</td>
         <td class="text-center">${badgeUsadas(a.usadas)}</td>
         <td>
-          <button class="btn btn-outline-primary btn-sm"
-            onclick="copiarEnlace('${BASE}/entrada/${a.token}')">
+          <button class="btn btn-outline-primary btn-sm btn-copiar"
+            data-url="${BASE}/entrada/${a.token}">
             📋 Copiar enlace
           </button>
           <a href="${BASE}/entrada/${a.token}" target="_blank"
             class="btn btn-link btn-sm">Ver</a>
         </td>
         <td>
-          <button class="btn btn-outline-danger btn-sm"
-            onclick="eliminarAlumno('${a.id}', '${a.nombre} ${a.apellidos}')"
+          <button class="btn btn-outline-danger btn-sm btn-borrar"
+            data-id="${a.id}"
+            data-nombre="${a.nombre} ${a.apellidos}"
             ${a.usadas > 0 ? 'disabled title="Tiene entradas ya usadas"' : ''}>🗑</button>
         </td>
       </tr>
@@ -199,6 +201,18 @@
     const alumnos = await res.json();
     renderCards(alumnos);
     renderTabla(alumnos);
+    attachEventos();
+  }
+
+  function attachEventos() {
+    document.querySelectorAll('.btn-borrar').forEach(btn => {
+      btn.addEventListener('click', () => {
+        eliminarAlumno(btn.dataset.id, btn.dataset.nombre);
+      });
+    });
+    document.querySelectorAll('.btn-copiar').forEach(btn => {
+      btn.addEventListener('click', () => copiarEnlace(btn.dataset.url));
+    });
   }
 
   function copiarEnlace(url) {
