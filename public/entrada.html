@@ -148,6 +148,52 @@
       z-index: 1;
     }
 
+    .ticket-instituto {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 0.3rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Banda entradas/caterings destacada ── */
+    .entries-band {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      background: rgba(201,162,39,0.1);
+      border-bottom: 1px solid rgba(201,162,39,0.2);
+      padding: 0.7rem 1.25rem;
+    }
+    .entry-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+    .entry-item + .entry-item {
+      border-left: 1px solid rgba(201,162,39,0.25);
+    }
+    .entry-num {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--gold-l);
+      line-height: 1;
+    }
+    .entry-desc {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.15rem;
+    }
+
     /* ── BANDA CON NOMBRE ── */
     .ticket-name-band {
       background: var(--navy);
@@ -174,26 +220,26 @@
     }
 
     /* ── LÍNEA DE CORTE ── */
+    .ticket-name-band { border-bottom: none; }
+
     .ticket-tear {
       position: relative;
-      height: 2px;
-      background: transparent;
-      border-top: 2px dashed rgba(255,255,255,0.18);
-      margin: 0 14px;
+      height: 0;
+      border-top: 1px solid rgba(255,255,255,0.13);
     }
     .ticket-tear::before, .ticket-tear::after {
       content: '';
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 24px;
-      height: 24px;
-      background: #0d2342;
+      width: 22px;
+      height: 22px;
+      background: #0c2039;
       border-radius: 50%;
-      border: 2px solid var(--gold);
+      border: 1.5px solid var(--gold);
     }
-    .ticket-tear::before { left: -20px; }
-    .ticket-tear::after  { right: -20px; }
+    .ticket-tear::before { left: -12px; }
+    .ticket-tear::after  { right: -12px; }
 
     /* ── BOTTOM: datos + QR ── */
     .ticket-bottom {
@@ -432,6 +478,7 @@
         <!-- Cabecera decorativa -->
         <div class="ticket-top">
           <div class="ticket-inner-border"></div>
+          <div class="ticket-instituto">I.E.S. Carranque</div>
           <div class="ticket-decos">
             <span class="deco-icon">🎓</span>
             <span class="deco-icon">📜</span>
@@ -451,6 +498,18 @@
 
         <!-- Línea de corte -->
         <div class="ticket-tear"></div>
+
+        <!-- Entradas y caterings destacados -->
+        <div class="entries-band">
+          <div class="entry-item">
+            <div class="entry-num">${d.num_entradas}</div>
+            <div class="entry-desc">🎓 ${d.num_entradas === 1 ? 'entrada' : 'entradas'}</div>
+          </div>
+          <div class="entry-item">
+            <div class="entry-num">${d.num_caterings}</div>
+            <div class="entry-desc">🍽️ ${d.num_caterings === 1 ? 'catering' : 'caterings'}</div>
+          </div>
+        </div>
 
         <!-- Datos + QR -->
         <div class="ticket-bottom">
@@ -491,10 +550,6 @@
 
           <div class="ticket-footer">
             <div class="esperamos">✦ ¡Te esperamos! ✦</div>
-            <div class="entry-pills">
-              <span class="entry-pill">🎓 ${d.num_entradas} ${d.num_entradas === 1 ? 'entrada' : 'entradas'}</span>
-              <span class="entry-pill">🍽️ ${d.num_caterings} catering${d.num_caterings !== 1 ? 's' : ''}</span>
-            </div>
           </div>
 
           <div class="nota-conjunta">
