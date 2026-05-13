@@ -51,11 +51,10 @@ app.get('/admin', requireLogin, (req, res) => {
 app.get('/api/alumnos', requireLogin, (req, res) => {
   const db = leer();
   const resultado = db.alumnos
-    .sort((a, b) => a.apellidos.localeCompare(b.apellidos) || a.nombre.localeCompare(b.nombre))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
     .map(a => ({
       id: a.id,
       nombre: a.nombre,
-      apellidos: a.apellidos,
       token: a.token,
       num_entradas: a.num_entradas,
       num_caterings: a.num_caterings,
@@ -66,8 +65,8 @@ app.get('/api/alumnos', requireLogin, (req, res) => {
 });
 
 app.post('/api/alumnos', requireLogin, (req, res) => {
-  const { nombre, apellidos, num_entradas, num_caterings } = req.body;
-  if (!nombre || !apellidos || !num_entradas || num_entradas < 1) {
+  const { nombre, num_entradas, num_caterings } = req.body;
+  if (!nombre || !num_entradas || num_entradas < 1) {
     return res.status(400).json({ error: 'Datos incompletos' });
   }
 
@@ -81,7 +80,6 @@ app.post('/api/alumnos', requireLogin, (req, res) => {
   db.alumnos.push({
     id: alumnoId,
     nombre: nombre.trim(),
-    apellidos: apellidos.trim(),
     token: uuidv4(),
     codigo_qr: uuidv4(),
     num_entradas: parseInt(num_entradas),
@@ -131,7 +129,6 @@ app.get('/api/entrada/:token', async (req, res) => {
   const qr = await QRCode.toDataURL(alumno.codigo_qr, { width: 300, margin: 2 });
   res.json({
     nombre: alumno.nombre,
-    apellidos: alumno.apellidos,
     num_entradas: alumno.num_entradas,
     num_caterings: alumno.num_caterings,
     usada: alumno.usada,
@@ -157,7 +154,7 @@ app.post('/api/validar', (req, res) => {
       ok: false,
       motivo: 'ya_usada',
       usada_en: alumno.usada_en,
-      alumno: `${alumno.nombre} ${alumno.apellidos}`
+      alumno: alumno.nombre
     });
   }
 
@@ -167,7 +164,7 @@ app.post('/api/validar', (req, res) => {
 
   res.json({
     ok: true,
-    alumno: `${alumno.nombre} ${alumno.apellidos}`,
+    alumno: alumno.nombre,
     num_entradas: alumno.num_entradas,
     num_caterings: alumno.num_caterings
   });
