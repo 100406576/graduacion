@@ -50,23 +50,26 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.35rem;
-      background: #fff;
-      color: var(--navy);
+      gap: 0.4rem;
+      background: #fde68a;
+      color: #78350f;
       border: none;
-      border-radius: 8px;
-      padding: 0.55rem 0.75rem;
-      font-size: 0.85rem;
-      font-weight: 700;
+      border-radius: 10px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.9rem;
+      font-weight: 800;
       font-family: 'Inter', sans-serif;
       text-decoration: none;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.1s;
       white-space: nowrap;
       min-height: 44px;
       flex: 2;
+      letter-spacing: 0.2px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     }
-    .btn-validar:hover { background: #e0e7ff; color: var(--navy); }
+    .btn-validar:hover { background: #fcd34d; color: #78350f; }
+    .btn-validar:active { transform: scale(0.97); }
 
     .btn-top {
       display: inline-flex;
@@ -93,7 +96,7 @@
       .topbar { flex-direction: row; align-items: center; padding: 0.6rem 1.25rem; gap: 0.75rem; }
       .topbar-brand { margin-right: auto; }
       .topbar-actions { width: auto; }
-      .btn-validar { flex: none; min-height: unset; padding: 0.5rem 1rem; }
+      .btn-validar { flex: none; min-height: unset; padding: 0.5rem 1.1rem; }
       .btn-top { flex: none; min-height: unset; padding: 0.4rem 0.75rem; font-size: 0.82rem; }
     }
 
