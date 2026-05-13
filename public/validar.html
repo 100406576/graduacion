@@ -230,13 +230,9 @@
     }
   }
 
-  // ── Volver a escanear ─────────────────────────────────
+  // ── Volver a escanear: recarga limpia ────────────────
   document.getElementById('btn-siguiente').addEventListener('click', () => {
-    document.getElementById('vista-resultado').className = '';
-    document.getElementById('vista-resultado').style.display = 'none';
-    document.getElementById('vista-scanner').style.display = 'flex';
-    escaneando = true;
-    tick();
+    window.location.reload();
   });
 
   iniciar();
