@@ -17,7 +17,6 @@
       max-width: 480px;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      page-break-after: always;
     }
     .entrada-header {
       font-size: 1rem;
@@ -30,13 +29,25 @@
       font-size: clamp(1.3rem, 5vw, 1.7rem);
       font-weight: bold;
       color: #111;
-      margin: 0.6rem 0 0.25rem;
+      margin: 0.6rem 0 0.5rem;
       word-break: break-word;
     }
-    .numero-entrada {
-      font-size: 1rem;
-      color: #555;
+    .info-entradas {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
       margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .info-pill {
+      background: #f0f4f8;
+      border: 1px solid #c8d8e8;
+      border-radius: 20px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.95rem;
+      color: #1a3c6b;
+      font-weight: 600;
+      font-family: sans-serif;
     }
     .qr-imagen {
       width: min(220px, 70vw);
@@ -44,12 +55,21 @@
       margin: 0 auto 1.25rem;
       display: block;
     }
+    .nota-conjunta {
+      background: #fff8e1;
+      border: 1px solid #f0c040;
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.85rem;
+      color: #7a5800;
+      font-family: sans-serif;
+      margin-bottom: 1rem;
+    }
     .evento-info {
       font-size: 0.9rem;
       color: #444;
       border-top: 1px solid #ddd;
       padding-top: 1rem;
-      margin-top: 0.5rem;
     }
     .usada-badge {
       background: #dc3545;
@@ -58,14 +78,13 @@
       font-weight: bold;
       padding: 0.4rem 1rem;
       border-radius: 6px;
-      margin-top: 0.5rem;
+      margin-bottom: 0.75rem;
       display: inline-block;
     }
+
     .btn-imprimir-fixed {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       padding: 0.75rem 1rem;
       background: white;
       border-top: 1px solid #dee2e6;
@@ -81,11 +100,7 @@
     @media print {
       body { background: white; }
       .no-print, nav, .btn-imprimir-fixed, .espacio-boton-fijo { display: none !important; }
-      .entrada-card {
-        box-shadow: none;
-        margin: 0 auto;
-        page-break-after: always;
-      }
+      .entrada-card { box-shadow: none; margin: 0 auto; }
     }
   </style>
 </head>
@@ -127,26 +142,35 @@
       return;
     }
 
-    const datos = await res.json();
-    const html = datos.entradas.map(e => `
+    const d = await res.json();
+    document.getElementById('contenido').innerHTML = `
       <div class="entrada-card">
         <div class="entrada-header">🎓 Graduación 2026</div>
-        <div style="font-size:0.8rem;color:#888;text-transform:uppercase;letter-spacing:1px;margin:0.3rem 0 0.5rem">
+        <div style="font-size:0.8rem;color:#888;text-transform:uppercase;letter-spacing:1px;margin:0.3rem 0 0.5rem;font-family:sans-serif">
           Entrada para el acto de graduación
         </div>
-        <div class="nombre-alumno">${datos.nombre} ${datos.apellidos}</div>
-        <div class="numero-entrada">Entrada ${e.numero} de ${datos.total}</div>
-        <img src="${e.qr}" class="qr-imagen" alt="Código QR entrada ${e.numero}">
-        ${e.usada ? '<div class="usada-badge">⚠ ESTA ENTRADA YA FUE USADA</div>' : ''}
+        <div class="nombre-alumno">${d.nombre} ${d.apellidos}</div>
+
+        <div class="info-entradas">
+          <span class="info-pill">🎓 ${d.num_entradas} ${d.num_entradas === 1 ? 'entrada' : 'entradas'}</span>
+          <span class="info-pill">🍽️ ${d.num_caterings} ${d.num_caterings === 1 ? 'catering' : 'caterings'}</span>
+        </div>
+
+        ${d.usada ? '<div class="usada-badge">⚠ ESTA ENTRADA YA FUE USADA</div>' : ''}
+
+        <img src="${d.qr}" class="qr-imagen" alt="Código QR">
+
+        <div class="nota-conjunta">
+          ⚠️ <strong>Entrada conjunta obligatoria</strong> — todos los invitados deben acceder al mismo tiempo
+        </div>
+
         <div class="evento-info">
           📅 16 de junio de 2026 · 18:30h<br>
-          📍 Casa de la Cultura — Carranque<br>
-          <small>Presenta este QR en la entrada. <strong>No compartas esta entrada.</strong></small>
+          📍 Casa de la Cultura — Carranque
         </div>
       </div>
-    `).join('');
+    `;
 
-    document.getElementById('contenido').innerHTML = html;
     document.getElementById('btn-imprimir').style.display = 'block';
   }
 

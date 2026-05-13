@@ -15,7 +15,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || uuidv4(),
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 } // 8 horas
+  cookie: { maxAge: 8 * 60 * 60 * 1000 }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -52,66 +52,57 @@ app.get('/api/alumnos', requireLogin, (req, res) => {
   const db = leer();
   const resultado = db.alumnos
     .sort((a, b) => a.apellidos.localeCompare(b.apellidos) || a.nombre.localeCompare(b.nombre))
-    .map(a => {
-      const entradas = db.entradas.filter(e => e.alumno_id === a.id);
-      return {
-        id: a.id,
-        nombre: a.nombre,
-        apellidos: a.apellidos,
-        token: a.token,
-        total_entradas: entradas.length,
-        descargadas: entradas.filter(e => e.descargada).length,
-        usadas: entradas.filter(e => e.usada).length
-      };
-    });
+    .map(a => ({
+      id: a.id,
+      nombre: a.nombre,
+      apellidos: a.apellidos,
+      token: a.token,
+      num_entradas: a.num_entradas,
+      num_caterings: a.num_caterings,
+      descargada: a.descargada,
+      usada: a.usada
+    }));
   res.json(resultado);
 });
 
 app.post('/api/alumnos', requireLogin, (req, res) => {
-  const { nombre, apellidos, num_entradas } = req.body;
+  const { nombre, apellidos, num_entradas, num_caterings } = req.body;
   if (!nombre || !apellidos || !num_entradas || num_entradas < 1) {
     return res.status(400).json({ error: 'Datos incompletos' });
   }
 
   const db = leer();
-  const token = uuidv4();
   const alumnoId = uuidv4();
 
   db.alumnos.push({
     id: alumnoId,
     nombre: nombre.trim(),
     apellidos: apellidos.trim(),
-    token,
+    token: uuidv4(),
+    codigo_qr: uuidv4(),
+    num_entradas: parseInt(num_entradas),
+    num_caterings: parseInt(num_caterings) || 0,
+    descargada: false,
+    usada: false,
+    usada_en: null,
     creado_en: new Date().toISOString()
   });
 
-  for (let i = 1; i <= num_entradas; i++) {
-    db.entradas.push({
-      id: uuidv4(),
-      alumno_id: alumnoId,
-      codigo_qr: uuidv4(),
-      numero: i,
-      descargada: false,
-      usada: false,
-      usada_en: null,
-      creado_en: new Date().toISOString()
-    });
-  }
-
   guardar(db);
-  res.json({ id: alumnoId, token });
+  res.json({ id: alumnoId });
 });
 
 app.delete('/api/alumnos/:id', requireLogin, (req, res) => {
   const { id } = req.params;
   const db = leer();
 
-  const tieneUsadas = db.entradas.some(e => e.alumno_id === id && e.usada);
-  if (tieneUsadas) {
-    return res.status(400).json({ error: 'No se puede eliminar: hay entradas ya usadas' });
+  const alumno = db.alumnos.find(a => a.id === id);
+  if (!alumno) return res.status(404).json({ error: 'No encontrado' });
+
+  if (alumno.usada) {
+    return res.status(400).json({ error: 'No se puede eliminar: la entrada ya fue usada' });
   }
 
-  db.entradas = db.entradas.filter(e => e.alumno_id !== id);
   db.alumnos = db.alumnos.filter(a => a.id !== id);
   guardar(db);
   res.json({ ok: true });
@@ -123,9 +114,7 @@ app.get('/entrada/:token', (req, res) => {
   const alumno = db.alumnos.find(a => a.token === req.params.token);
   if (!alumno) return res.status(404).send('Enlace no válido');
 
-  db.entradas.forEach(e => {
-    if (e.alumno_id === alumno.id) e.descargada = true;
-  });
+  alumno.descargada = true;
   guardar(db);
   res.sendFile(path.join(__dirname, 'public', 'entrada.html'));
 });
@@ -135,20 +124,14 @@ app.get('/api/entrada/:token', async (req, res) => {
   const alumno = db.alumnos.find(a => a.token === req.params.token);
   if (!alumno) return res.status(404).json({ error: 'No encontrado' });
 
-  const entradas = db.entradas
-    .filter(e => e.alumno_id === alumno.id)
-    .sort((a, b) => a.numero - b.numero);
-
-  const entradasConQR = await Promise.all(entradas.map(async (e) => {
-    const qr = await QRCode.toDataURL(e.codigo_qr, { width: 300, margin: 2 });
-    return { id: e.id, numero: e.numero, usada: e.usada, qr };
-  }));
-
+  const qr = await QRCode.toDataURL(alumno.codigo_qr, { width: 300, margin: 2 });
   res.json({
     nombre: alumno.nombre,
     apellidos: alumno.apellidos,
-    total: entradas.length,
-    entradas: entradasConQR
+    num_entradas: alumno.num_entradas,
+    num_caterings: alumno.num_caterings,
+    usada: alumno.usada,
+    qr
   });
 });
 
@@ -162,30 +145,27 @@ app.post('/api/validar', (req, res) => {
   if (!codigo_qr) return res.json({ ok: false, motivo: 'no_existe' });
 
   const db = leer();
-  const entrada = db.entradas.find(e => e.codigo_qr === codigo_qr);
-  if (!entrada) return res.json({ ok: false, motivo: 'no_existe' });
+  const alumno = db.alumnos.find(a => a.codigo_qr === codigo_qr);
+  if (!alumno) return res.json({ ok: false, motivo: 'no_existe' });
 
-  const alumno = db.alumnos.find(a => a.id === entrada.alumno_id);
-  const totalAlumno = db.entradas.filter(e => e.alumno_id === entrada.alumno_id).length;
-
-  if (entrada.usada) {
+  if (alumno.usada) {
     return res.json({
       ok: false,
       motivo: 'ya_usada',
-      usada_en: entrada.usada_en,
+      usada_en: alumno.usada_en,
       alumno: `${alumno.nombre} ${alumno.apellidos}`
     });
   }
 
-  entrada.usada = true;
-  entrada.usada_en = new Date().toLocaleString('es-ES');
+  alumno.usada = true;
+  alumno.usada_en = new Date().toLocaleString('es-ES');
   guardar(db);
 
   res.json({
     ok: true,
     alumno: `${alumno.nombre} ${alumno.apellidos}`,
-    numero: entrada.numero,
-    total: totalAlumno
+    num_entradas: alumno.num_entradas,
+    num_caterings: alumno.num_caterings
   });
 });
 
@@ -196,11 +176,11 @@ app.get('/api/backup', requireLogin, (req, res) => {
 
 app.post('/api/importar', requireLogin, (req, res) => {
   const datos = req.body;
-  if (!Array.isArray(datos.alumnos) || !Array.isArray(datos.entradas)) {
+  if (!Array.isArray(datos.alumnos)) {
     return res.status(400).json({ error: 'Fichero no válido' });
   }
-  guardar(datos);
-  res.json({ ok: true, alumnos: datos.alumnos.length, entradas: datos.entradas.length });
+  guardar({ alumnos: datos.alumnos });
+  res.json({ ok: true, alumnos: datos.alumnos.length });
 });
 
 app.listen(PORT, () => {

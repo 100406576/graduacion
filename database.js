@@ -5,7 +5,7 @@ const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'graduacion.
 
 function leer() {
   if (!fs.existsSync(DB_PATH)) {
-    const vacio = { alumnos: [], entradas: [] };
+    const vacio = { alumnos: [] };
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     fs.writeFileSync(DB_PATH, JSON.stringify(vacio, null, 2));
     return vacio;
