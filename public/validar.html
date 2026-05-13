@@ -11,9 +11,10 @@
       background: #0d1b2a;
       color: white;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      min-height: 100dvh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     header {
@@ -22,109 +23,110 @@
       padding: 0.85rem 1rem;
       font-size: 1rem;
       font-weight: 600;
-      letter-spacing: 0.5px;
       border-bottom: 1px solid #1e3a5f;
       flex-shrink: 0;
     }
 
-    .instruccion {
-      text-align: center;
-      color: #8899aa;
-      font-size: 0.9rem;
-      padding: 0.6rem 1rem;
-      flex-shrink: 0;
-    }
-
-    #reader-wrap {
+    /* ── VISTA ESCÁNER ── */
+    #vista-scanner {
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      padding: 0.5rem;
-      min-height: 0;
+      justify-content: center;
+      padding: 1rem;
+      gap: 0.75rem;
     }
-
+    #vista-scanner p {
+      color: #8899aa;
+      font-size: 0.95rem;
+      text-align: center;
+    }
     #reader {
       width: 100%;
-      max-width: min(400px, 90vw);
+      max-width: min(380px, 90vw);
       border-radius: 14px;
       overflow: hidden;
       background: #111;
     }
+    #reader > img, #reader select, #reader a, #reader span { display: none !important; }
 
-    /* Oculta los elementos internos de html5-qrcode que quedan feos */
-    #reader > img, #reader select, #reader a { display: none !important; }
-
-    #resultado {
+    /* ── VISTA RESULTADO ── */
+    #vista-resultado {
       display: none;
-      position: fixed;
-      inset: 0;
+      flex: 1;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       padding: 2rem 1.5rem;
       text-align: center;
-      z-index: 10;
     }
-    #resultado.visible { display: flex; }
+    #vista-resultado.visible { display: flex; }
 
-    .resultado-ok    { background: #198754; }
-    .resultado-error { background: #dc3545; }
+    .res-ok    { background: #198754; }
+    .res-error { background: #c0392b; }
 
-    .resultado-icono { font-size: 4rem; margin-bottom: 1rem; }
-    .resultado-estado { font-size: 1.6rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 0.5rem; }
-    .resultado-nombre { font-size: 1.9rem; font-weight: 700; margin: 0.5rem 0; word-break: break-word; }
-    .resultado-sub { font-size: 1.1rem; opacity: 0.9; }
+    .res-icono  { font-size: 5rem; line-height: 1; margin-bottom: 1rem; }
+    .res-estado { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; margin-bottom: 0.75rem; }
+    .res-nombre { font-size: 2rem; font-weight: 700; word-break: break-word; margin-bottom: 0.4rem; }
+    .res-sub    { font-size: 1.2rem; opacity: 0.9; margin-bottom: 2.5rem; }
 
-    .btn-siguiente {
-      margin-top: 2.5rem;
+    .btn-nueva {
       background: white;
       color: #111;
       border: none;
-      border-radius: 12px;
-      padding: 1rem 2rem;
-      font-size: 1.1rem;
+      border-radius: 14px;
+      padding: 1.1rem 0;
+      font-size: 1.2rem;
       font-weight: 700;
       cursor: pointer;
       width: 100%;
-      max-width: 320px;
+      max-width: 340px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     }
-    .btn-siguiente:active { opacity: 0.85; }
+    .btn-nueva:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
 
-<header>🎓 Control de Entrada — Graduación</header>
-<p class="instruccion">Apunta la cámara al código QR de la entrada</p>
+<header>🎓 Control de Entrada — Graduación 2026</header>
 
-<div id="reader-wrap">
+<!-- Vista cámara -->
+<div id="vista-scanner">
+  <p>Apunta la cámara al código QR de la entrada</p>
   <div id="reader"></div>
 </div>
 
-<div id="resultado" role="alert" aria-live="assertive"></div>
+<!-- Vista resultado -->
+<div id="vista-resultado" role="alert" aria-live="assertive">
+  <div class="res-icono"  id="res-icono"></div>
+  <div class="res-estado" id="res-estado"></div>
+  <div class="res-nombre" id="res-nombre"></div>
+  <div class="res-sub"    id="res-sub"></div>
+  <button class="btn-nueva" onclick="volver()">📷 Escanear siguiente entrada</button>
+</div>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
   let escaner = null;
   let procesando = false;
 
-  function iniciarEscaner() {
-    document.getElementById('resultado').className = '';
-    document.getElementById('resultado').style.display = 'none';
-    document.getElementById('reader-wrap').style.display = 'flex';
+  async function iniciarEscaner() {
     procesando = false;
+    document.getElementById('reader').innerHTML = '';
 
     escaner = new Html5Qrcode('reader');
-    escaner.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 260, height: 260 } },
-      onEscaneo,
-      () => {}
-    ).catch(() => {
+    try {
+      await escaner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        onEscaneo,
+        () => {}
+      );
+    } catch {
       document.getElementById('reader').innerHTML =
         '<p style="color:#f87171;padding:1.5rem;text-align:center">No se pudo acceder a la cámara.<br>Comprueba que has dado permiso.</p>';
-    });
+    }
   }
 
   async function onEscaneo(texto) {
@@ -132,7 +134,6 @@
     procesando = true;
 
     try { await escaner.stop(); } catch (_) {}
-    document.getElementById('reader-wrap').style.display = 'none';
 
     const res = await fetch('/api/validar', {
       method: 'POST',
@@ -141,39 +142,35 @@
     });
     const datos = await res.json();
 
-    const div = document.getElementById('resultado');
+    // Ocultar escáner, mostrar resultado
+    document.getElementById('vista-scanner').style.display = 'none';
+    const vr = document.getElementById('vista-resultado');
 
     if (datos.ok) {
-      div.className = 'resultado-ok visible';
-      div.innerHTML = `
-        <div class="resultado-icono">✅</div>
-        <div class="resultado-estado">ENTRADA VÁLIDA</div>
-        <div class="resultado-nombre">${datos.alumno}</div>
-        <div class="resultado-sub">Entrada ${datos.numero} de ${datos.total}</div>
-        <button class="btn-siguiente" onclick="siguienteEntrada()">▶ Siguiente entrada</button>
-      `;
+      vr.className = 'res-ok visible';
+      document.getElementById('res-icono').textContent  = '✅';
+      document.getElementById('res-estado').textContent = 'ENTRADA VÁLIDA';
+      document.getElementById('res-nombre').textContent = datos.alumno;
+      document.getElementById('res-sub').textContent    = `Entrada ${datos.numero} de ${datos.total}`;
     } else if (datos.motivo === 'ya_usada') {
-      div.className = 'resultado-error visible';
-      div.innerHTML = `
-        <div class="resultado-icono">❌</div>
-        <div class="resultado-estado">YA USADA</div>
-        <div class="resultado-nombre">${datos.alumno || ''}</div>
-        <div class="resultado-sub">Escaneada a las ${datos.usada_en}</div>
-        <button class="btn-siguiente" onclick="siguienteEntrada()">▶ Siguiente entrada</button>
-      `;
+      vr.className = 'res-error visible';
+      document.getElementById('res-icono').textContent  = '❌';
+      document.getElementById('res-estado').textContent = 'YA USADA';
+      document.getElementById('res-nombre').textContent = datos.alumno || '';
+      document.getElementById('res-sub').textContent    = `Escaneada a las ${datos.usada_en}`;
     } else {
-      div.className = 'resultado-error visible';
-      div.innerHTML = `
-        <div class="resultado-icono">❌</div>
-        <div class="resultado-estado">NO RECONOCIDO</div>
-        <div class="resultado-sub">Este QR no corresponde a ninguna entrada</div>
-        <button class="btn-siguiente" onclick="siguienteEntrada()">▶ Intentar de nuevo</button>
-      `;
+      vr.className = 'res-error visible';
+      document.getElementById('res-icono').textContent  = '❌';
+      document.getElementById('res-estado').textContent = 'NO RECONOCIDO';
+      document.getElementById('res-nombre').textContent = '';
+      document.getElementById('res-sub').textContent    = 'Este QR no corresponde a ninguna entrada';
     }
   }
 
-  function siguienteEntrada() {
-    document.getElementById('reader').innerHTML = '';
+  function volver() {
+    document.getElementById('vista-resultado').className = '';
+    document.getElementById('vista-resultado').style.display = 'none';
+    document.getElementById('vista-scanner').style.display = 'flex';
     iniciarEscaner();
   }
 
