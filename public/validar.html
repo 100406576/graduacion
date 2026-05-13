@@ -27,29 +27,55 @@
       flex-shrink: 0;
     }
 
-    /* ── VISTA ESCÁNER ── */
+    /* ── VISTA CÁMARA ── */
     #vista-scanner {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
       gap: 0.75rem;
+      padding: 1rem;
+      position: relative;
     }
-    #vista-scanner p {
-      color: #8899aa;
-      font-size: 0.95rem;
-      text-align: center;
-    }
-    #reader {
+    #vista-scanner p { color: #8899aa; font-size: 0.9rem; }
+
+    .camara-wrap {
+      position: relative;
       width: 100%;
       max-width: min(380px, 90vw);
       border-radius: 14px;
       overflow: hidden;
-      background: #111;
+      background: #000;
+      aspect-ratio: 1;
     }
-    #reader > img, #reader select, #reader a, #reader span { display: none !important; }
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Marco de escaneo */
+    .marco {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .marco-box {
+      width: 65%;
+      aspect-ratio: 1;
+      border: 3px solid rgba(255,255,255,0.7);
+      border-radius: 10px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+    }
+    .marco-box.detectado {
+      border-color: #4ade80;
+      transition: border-color 0.1s;
+    }
+    #canvas { display: none; }
 
     /* ── VISTA RESULTADO ── */
     #vista-resultado {
@@ -85,6 +111,13 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     }
     .btn-nueva:active { transform: scale(0.97); }
+
+    #msg-error {
+      color: #f87171;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
@@ -94,7 +127,12 @@
 <!-- Vista cámara -->
 <div id="vista-scanner">
   <p>Apunta la cámara al código QR de la entrada</p>
-  <div id="reader"></div>
+  <div class="camara-wrap">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <div class="marco"><div class="marco-box" id="marco-box"></div></div>
+  </div>
+  <div id="msg-error" style="display:none"></div>
 </div>
 
 <!-- Vista resultado -->
@@ -103,46 +141,64 @@
   <div class="res-estado" id="res-estado"></div>
   <div class="res-nombre" id="res-nombre"></div>
   <div class="res-sub"    id="res-sub"></div>
-  <button class="btn-nueva" onclick="volver()">📷 Escanear siguiente entrada</button>
+  <button class="btn-nueva" id="btn-siguiente">📷 Escanear siguiente entrada</button>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
-  let escaner = null;
-  let procesando = false;
-  let arrancado = false;
+  const video    = document.getElementById('video');
+  const canvas   = document.getElementById('canvas');
+  const ctx      = canvas.getContext('2d', { willReadFrequently: true });
+  const marcoBox = document.getElementById('marco-box');
 
-  async function iniciarEscaner() {
-    procesando = false;
+  let escaneando = false; // true = procesando fotogramas
+  let rafId      = null;
 
-    // Si ya está arrancado, solo reanudar — sin destruir ni recrear
-    if (arrancado) {
-      try { escaner.resume(); } catch (_) {}
-      return;
-    }
-
-    escaner = new Html5Qrcode('reader');
+  // ── Arrancar cámara ───────────────────────────────────
+  async function iniciar() {
     try {
-      await escaner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        onEscaneo,
-        () => {}
-      );
-      arrancado = true;
-    } catch {
-      document.getElementById('reader').innerHTML =
-        '<p style="color:#f87171;padding:1.5rem;text-align:center">No se pudo acceder a la cámara.<br>Comprueba que has dado permiso.</p>';
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = stream;
+      await video.play();
+      escaneando = true;
+      tick();
+    } catch (err) {
+      const msg = document.getElementById('msg-error');
+      msg.style.display = 'block';
+      msg.textContent = 'No se pudo acceder a la cámara. Comprueba que has dado permiso en el navegador.';
     }
   }
 
-  async function onEscaneo(texto) {
-    if (procesando) return;
-    procesando = true;
+  // ── Bucle de lectura de fotogramas ────────────────────
+  function tick() {
+    if (!escaneando) return;
 
-    // Pausar detección sin apagar la cámara
-    try { escaner.pause(); } catch (_) {}
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
 
+      const imagen = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const codigo = jsQR(imagen.data, imagen.width, imagen.height, {
+        inversionAttempts: 'dontInvert'
+      });
+
+      if (codigo) {
+        escaneando = false;
+        marcoBox.classList.add('detectado');
+        setTimeout(() => marcoBox.classList.remove('detectado'), 300);
+        validar(codigo.data);
+        return;
+      }
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // ── Validar contra el servidor ────────────────────────
+  async function validar(texto) {
     const res = await fetch('/api/validar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -174,14 +230,16 @@
     }
   }
 
-  function volver() {
+  // ── Volver a escanear ─────────────────────────────────
+  document.getElementById('btn-siguiente').addEventListener('click', () => {
     document.getElementById('vista-resultado').className = '';
     document.getElementById('vista-resultado').style.display = 'none';
     document.getElementById('vista-scanner').style.display = 'flex';
-    iniciarEscaner();
-  }
+    escaneando = true;
+    tick();
+  });
 
-  iniciarEscaner();
+  iniciar();
 </script>
 </body>
 </html>
