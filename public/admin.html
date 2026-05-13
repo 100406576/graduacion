@@ -161,61 +161,47 @@
     .badge-green   { background: #f0fdf4; color: #166534; }
     .badge-gray    { background: #f1f5f9; color: var(--muted); }
 
-    /* ── Botones de acción ── */
-    .btn-link-action {
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      border-radius: 7px;
-      padding: 0.45rem 0.85rem;
+    /* ── Botones de acción (todos misma base) ── */
+    .btn-action {
+      flex: 1;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 9px;
+      padding: 0.55rem 0.5rem;
       font-size: 0.82rem;
       font-weight: 600;
       font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      transition: background 0.15s;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    .btn-link-action:hover { background: #1e40af; color: #fff; }
-
-    .btn-ver, .btn-compartir {
-      background: transparent;
-      color: var(--blue);
-      border: 1.5px solid var(--blue);
-      border-radius: 8px;
-      padding: 0.45rem 0.75rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      font-family: 'Inter', sans-serif;
+      color: #334155;
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
-      transition: background 0.12s;
-      white-space: nowrap;
-    }
-    .btn-ver:hover, .btn-compartir:hover { background: var(--blue-light); color: var(--blue); }
-
-    .btn-danger {
-      background: transparent;
-      color: #dc2626;
-      border: 1.5px solid #fca5a5;
-      border-radius: 8px;
-      padding: 0.45rem 0.75rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
+      justify-content: center;
+      gap: 0.35rem;
       transition: background 0.12s, border-color 0.12s;
       white-space: nowrap;
+      min-width: 0;
     }
-    .btn-danger:hover:not(:disabled)  { background: #fef2f2; border-color: #f87171; }
-    .btn-danger:active:not(:disabled) { transform: scale(0.97); }
-    .btn-danger:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-action:hover { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+    .btn-action:active { transform: scale(0.97); }
+
+    /* Papelera: botón rojo compacto para la esquina de la card */
+    .btn-borrar {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.45rem 0.55rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .btn-borrar:hover:not(:disabled)  { background: #dc2626; }
+    .btn-borrar:active:not(:disabled) { transform: scale(0.95); }
+    .btn-borrar:disabled { opacity: 0.3; cursor: not-allowed; }
 
     /* ── Modal ── */
     .modal-content { border-radius: 16px; overflow: hidden; border: none; }
@@ -454,18 +440,24 @@
     cont.innerHTML = alumnos.map(a => `
       <div class="alumno-card">
         <div class="alumno-card-body">
-          <div class="alumno-nombre">${a.apellidos}, ${a.nombre}</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.6rem">
+            <div class="alumno-nombre" style="margin-bottom:0">${a.apellidos}, ${a.nombre}</div>
+            <button class="btn-borrar btn-borrar" data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
+              ${a.usada ? 'disabled title="Entrada ya usada"' : ''}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+              </svg>
+            </button>
+          </div>
           <div class="alumno-badges">
             <span class="badge badge-blue">🎓 ${a.num_entradas} entradas</span>
             <span class="badge badge-amber">🍽️ ${a.num_caterings} caterings</span>
             ${badgeEstado(a.usada)}
           </div>
-          <div class="alumno-actions" style="flex-wrap:wrap">
-            <button class="btn-link-action btn-copiar" data-url="${BASE}/entrada/${a.token}" style="flex:1;min-width:0">📋 Copiar</button>
-            <button class="btn-compartir btn-compartir-js" data-url="${BASE}/entrada/${a.token}" data-nombre="${a.nombre} ${a.apellidos}" style="flex:1;min-width:0">↗ Compartir</button>
-            <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn-ver" style="justify-content:center">Ver</a>
-            <button class="btn-danger btn-borrar" data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
-              ${a.usada ? 'disabled title="Entrada ya usada"' : ''}>🗑 Eliminar</button>
+          <div class="alumno-actions">
+            <button class="btn-action btn-copiar" data-url="${BASE}/entrada/${a.token}">📋 Copiar</button>
+            <button class="btn-action btn-compartir-js" data-url="${BASE}/entrada/${a.token}" data-nombre="${a.nombre} ${a.apellidos}">📤 Compartir</button>
+            <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn-action">👁 Ver</a>
           </div>
         </div>
       </div>
@@ -485,13 +477,19 @@
         <td style="text-align:center"><span class="badge badge-amber">${a.num_caterings}</span></td>
         <td style="text-align:center">${badgeEstado(a.usada)}</td>
         <td style="white-space:nowrap">
-          <button class="btn-link-action btn-copiar" data-url="${BASE}/entrada/${a.token}">📋 Copiar</button>
-          <button class="btn-compartir btn-compartir-js" data-url="${BASE}/entrada/${a.token}" data-nombre="${a.nombre} ${a.apellidos}" style="margin-left:0.35rem">↗ Compartir</button>
-          <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn-ver" style="margin-left:0.35rem">Ver</a>
+          <div style="display:flex;gap:0.35rem">
+            <button class="btn-action btn-copiar" data-url="${BASE}/entrada/${a.token}">📋 Copiar</button>
+            <button class="btn-action btn-compartir-js" data-url="${BASE}/entrada/${a.token}" data-nombre="${a.nombre} ${a.apellidos}">📤 Compartir</button>
+            <a href="${BASE}/entrada/${a.token}" target="_blank" class="btn-action">👁 Ver</a>
+          </div>
         </td>
         <td>
-          <button class="btn-danger btn-borrar" data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
-            ${a.usada ? 'disabled title="Entrada ya usada"' : ''}>🗑 Eliminar</button>
+          <button class="btn-borrar" data-id="${a.id}" data-nombre="${a.nombre} ${a.apellidos}"
+            ${a.usada ? 'disabled title="Entrada ya usada"' : ''}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
         </td>
       </tr>
     `).join('');
