@@ -22,14 +22,6 @@
       padding-bottom: 5rem;
     }
 
-    nav {
-      padding: 1rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-    }
-    nav span { color: rgba(255,255,255,0.65); font-size: 0.85rem; font-weight: 500; }
-
     .page-wrap {
       max-width: 420px;
       margin: 0 auto;
@@ -149,12 +141,12 @@
     }
 
     .ticket-instituto {
-      font-size: 0.68rem;
-      font-weight: 700;
+      font-size: 0.82rem;
+      font-weight: 800;
       color: var(--navy);
-      letter-spacing: 2.5px;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      opacity: 0.5;
+      opacity: 0.75;
       margin-bottom: 0.3rem;
       position: relative;
       z-index: 1;
@@ -197,7 +189,7 @@
     /* ── BANDA CON NOMBRE ── */
     .ticket-name-band {
       background: var(--navy);
-      padding: 0.8rem 1.25rem;
+      padding: 0.8rem 1.25rem 0.9rem;
       text-align: center;
       border-top: 2px solid var(--gold);
       border-bottom: 2px solid var(--gold);
@@ -219,8 +211,24 @@
       line-height: 1.25;
     }
 
+    .name-pills {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.6rem;
+    }
+    .name-pill {
+      background: rgba(201,162,39,0.15);
+      border: 1.5px solid rgba(201,162,39,0.45);
+      border-radius: 20px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--gold-l);
+    }
+
     /* ── LÍNEA DE CORTE ── */
-    .ticket-name-band { border-bottom: none; }
 
     .ticket-tear {
       position: relative;
@@ -425,11 +433,6 @@
 </head>
 <body>
 
-<nav>
-  <span class="logo">🎓</span>
-  <span>Graduación 2026</span>
-</nav>
-
 <div class="page-wrap">
   <div id="contenido">
     <div style="text-align:center;padding:3rem 1rem">
@@ -478,7 +481,7 @@
         <!-- Cabecera decorativa -->
         <div class="ticket-top">
           <div class="ticket-inner-border"></div>
-          <div class="ticket-instituto">I.E.S. Carranque</div>
+          <div class="ticket-instituto">I.E.S. Libertad</div>
           <div class="ticket-decos">
             <span class="deco-icon">🎓</span>
             <span class="deco-icon">📜</span>
@@ -487,29 +490,21 @@
           <div class="ticket-heading">Graduados</div>
           <div class="ticket-sub">· Secundaria ·</div>
           <div class="ticket-year">2026</div>
-          <div class="ticket-place">Carranque</div>
+          <div class="ticket-place">· Carranque ·</div>
         </div>
 
         <!-- Nombre del alumno -->
         <div class="ticket-name-band">
           <div class="name-label">Entrada a nombre de</div>
           <div class="name-text">${d.nombre} ${d.apellidos}</div>
+          <div class="name-pills">
+            <span class="name-pill">🎓 ${d.num_entradas} ${d.num_entradas === 1 ? 'entrada' : 'entradas'}</span>
+            <span class="name-pill">🍽️ ${d.num_caterings} ${d.num_caterings === 1 ? 'catering' : 'caterings'}</span>
+          </div>
         </div>
 
         <!-- Línea de corte -->
         <div class="ticket-tear"></div>
-
-        <!-- Entradas y caterings destacados -->
-        <div class="entries-band">
-          <div class="entry-item">
-            <div class="entry-num">${d.num_entradas}</div>
-            <div class="entry-desc">🎓 ${d.num_entradas === 1 ? 'entrada' : 'entradas'}</div>
-          </div>
-          <div class="entry-item">
-            <div class="entry-num">${d.num_caterings}</div>
-            <div class="entry-desc">🍽️ ${d.num_caterings === 1 ? 'catering' : 'caterings'}</div>
-          </div>
-        </div>
 
         <!-- Datos + QR -->
         <div class="ticket-bottom">
