@@ -26,6 +26,8 @@ function requireLogin(req, res, next) {
 }
 
 // ── Login ────────────────────────────────────────────────
+app.get('/', (req, res) => res.redirect('/login'));
+
 app.get('/login', (req, res) => {
   if (req.session.admin) return res.redirect('/admin');
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
